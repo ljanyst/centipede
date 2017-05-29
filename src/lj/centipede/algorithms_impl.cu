@@ -56,8 +56,15 @@ void TransformImpl<DeviceType::CUDA, AlgorithmType::Parallel>(
   uint32_t input_size  = size*in_elem_size;
   uint32_t output_size = size*out_elem_size;
 
-  cudaMalloc((void**) &d_input,  input_size);
-  cudaMalloc((void**) &d_output, output_size);
+  auto status = cudaMalloc((void**) &d_input,  input_size);
+  if(status != cudaSuccess)
+    throw std::runtime_error("Unable to allocate GPU memory for input data");
+
+  status = cudaMalloc((void**) &d_output, output_size);
+  if(status != cudaSuccess) {
+    cudaFree(d_input);
+    throw std::runtime_error("Unable to allocate GPU memory for output data");
+  }
 
   cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice);
 
